@@ -6,8 +6,8 @@ namespace FileSorter.Console.Services;
 {
     public async Task SortTo(string inputFilePath, string outputFilePath)
     {
-        int chunkSize = 100000; // Number of lines per chunk
-        List<string> tempFiles = new List<string>();
+        const int chunkSize = 100000; // Number of lines per chunk
+        var tempFiles = new List<string>();
         var maxDegreeOfParallelism = Environment.ProcessorCount;
 
         try
@@ -18,10 +18,13 @@ namespace FileSorter.Console.Services;
                 while (!reader.EndOfStream)
                 {
                     var lines = new List<string>(chunkSize);
-                    for (int i = 0; i < chunkSize && !reader.EndOfStream; i++)
+                    for (var i = 0; i < chunkSize && !reader.EndOfStream; i++)
                     {
-                        string line = await reader.ReadLineAsync();
-                        lines.Add(line);
+                        var line = await reader.ReadLineAsync() ?? string.Empty;
+                        if (!string.IsNullOrEmpty(line))
+                        {
+                            lines.Add(line);
+                        }
                     }
 
                     // Process each chunk in parallel
@@ -30,9 +33,9 @@ namespace FileSorter.Console.Services;
                         var sortedLines = lines.AsParallel()
                                                .Select(line =>
                                                {
-                                                   var parts = line.Split(new[] { ". " }, 2, StringSplitOptions.None);
-                                                   Int64 number = Int64.Parse(parts[0]);
-                                                   string sentence = parts[1];
+                                                   var parts = line.Split([". "], 2, StringSplitOptions.None);
+                                                   var number = long.Parse(parts[0]);
+                                                   var sentence = parts[1];
                                                    return new { Number = number, Sentence = sentence, Original = line };
                                                })
                                                .OrderBy(x => x.Sentence)
@@ -40,7 +43,7 @@ namespace FileSorter.Console.Services;
                                                .Select(x => x.Original)
                                                .ToList();
 
-                        string tempFileName = Path.GetTempFileName();
+                        var tempFileName = Path.GetTempFileName();
                         await using (var writer = new StreamWriter(new BufferedStream(new FileStream(tempFileName, FileMode.Create, FileAccess.Write, FileShare.None, 8192, FileOptions.WriteThrough)), Encoding.UTF8))
                         {
                             foreach (var line in sortedLines)
@@ -54,11 +57,10 @@ namespace FileSorter.Console.Services;
                         }
                     }));
 
-                    if (tasks.Count >= maxDegreeOfParallelism)
-                    {
-                        await Task.WhenAll(tasks);
-                        tasks.Clear();
-                    }
+                    if (tasks.Count < maxDegreeOfParallelism) continue;
+                    
+                    await Task.WhenAll(tasks);
+                    tasks.Clear();
                 }
 
                 await Task.WhenAll(tasks);
@@ -76,7 +78,7 @@ namespace FileSorter.Console.Services;
         }
     }
 
-    static async Task MergeSortedFiles(List<string> sortedFiles, string outputFilePath)
+    private static async Task MergeSortedFiles(List<string> sortedFiles, string outputFilePath)
     {
         var readers = sortedFiles.Select(filePath =>
             new StreamReader(new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 8192), Encoding.UTF8)
@@ -87,43 +89,46 @@ namespace FileSorter.Console.Services;
 
         await using (var writer = new StreamWriter(new BufferedStream(new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, FileOptions.WriteThrough)), Encoding.UTF8))
         {
-            for (int i = 0; i < readers.Count; i++)
+            for (var i = 0; i < readers.Count; i++)
             {
-                if (!readers[i].EndOfStream)
+                if (readers[i].EndOfStream) continue;
+                
+                var line = await readers[i].ReadLineAsync() ?? string.Empty;
+
+                if (string.IsNullOrEmpty(line)) continue;
+                
+                if (!priorityQueue.TryGetValue(line, out var indices))
                 {
-                    string line = await readers[i].ReadLineAsync();
-                    if (!priorityQueue.TryGetValue(line, out var indices))
-                    {
-                        indices = new Queue<int>();
-                        priorityQueue[line] = indices;
-                    }
-                    indices.Enqueue(i);
+                    indices = new Queue<int>();
+                    priorityQueue[line] = indices;
                 }
+                indices.Enqueue(i);
             }
 
             while (priorityQueue.Count > 0)
             {
-                var firstEntry = priorityQueue.First();
-                string line = firstEntry.Key;
-                int fileIndex = firstEntry.Value.Dequeue();
+                var (line, value) = priorityQueue.First();
+                var fileIndex = value.Dequeue();
 
-                if (firstEntry.Value.Count == 0)
+                if (value.Count == 0)
                 {
                     priorityQueue.Remove(line);
                 }
 
                 await writer.WriteLineAsync(line);
 
-                if (!readers[fileIndex].EndOfStream)
+                if (readers[fileIndex].EndOfStream) continue;
+                
+                var nextLine = await readers[fileIndex].ReadLineAsync() ?? string.Empty;
+                    
+                if (string.IsNullOrEmpty(nextLine)) continue;
+                    
+                if (!priorityQueue.TryGetValue(nextLine, out var indices))
                 {
-                    string nextLine = await readers[fileIndex].ReadLineAsync();
-                    if (!priorityQueue.TryGetValue(nextLine, out var indices))
-                    {
-                        indices = new Queue<int>();
-                        priorityQueue[nextLine] = indices;
-                    }
-                    indices.Enqueue(fileIndex);
+                    indices = new Queue<int>();
+                    priorityQueue[nextLine] = indices;
                 }
+                indices.Enqueue(fileIndex);
             }
         }
 

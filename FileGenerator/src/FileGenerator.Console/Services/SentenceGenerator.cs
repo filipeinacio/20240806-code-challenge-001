@@ -2,11 +2,11 @@
 
 namespace FileGenerator.Console.Services;
 
-public class SentenceGenerator
+public static class SentenceGenerator
 {
     public static string GenerateRandom(int maxWordsPerSentence)
     {
-        string[] words = new string[]
+        var words = new string[]
         {
             "the", "quick", "brown", "fox", "jumps", "over", "lazy", "dog",
             "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
@@ -23,11 +23,11 @@ public class SentenceGenerator
         Random.Shared.Shuffle(words);
 
         const int minValue = 5;
-        int maxValue = maxWordsPerSentence + 1 > minValue ? maxWordsPerSentence + 1 : minValue+1;
-        int wordCount = Random.Shared.Next(minValue, maxValue);
+        var maxValue = maxWordsPerSentence + 1 > minValue ? maxWordsPerSentence + 1 : minValue+1;
+        var wordCount = Random.Shared.Next(minValue, maxValue);
         var sentence = new StringBuilder();
 
-        for (int i = 0; i < wordCount; i++)
+        for (var i = 0; i < wordCount; i++)
         {
             if (i > 0)
                 sentence.Append(' ');

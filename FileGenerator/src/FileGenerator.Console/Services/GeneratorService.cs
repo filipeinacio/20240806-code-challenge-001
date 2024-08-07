@@ -8,7 +8,7 @@ public class GeneratorService
     {
         // Determine reservoir size based on file size
         const int averageLineLength = 100; // Estimated average line length in bytes
-        int reservoirSize = (int)(fileSize / (averageLineLength * 1000)); // Set as a fraction of the total size
+        var reservoirSize = (int)(fileSize / (averageLineLength * 1000)); // Set as a fraction of the total size
 
         if (reservoirSize < 1)
         {
@@ -25,13 +25,13 @@ public class GeneratorService
             while (currentSize < fileSize)
             {
                 // Generate a random int64
-                long randomInt = Random.Shared.NextInt64(long.MinValue, long.MaxValue);
+                var randomInt = Random.Shared.NextInt64(long.MinValue, long.MaxValue);
 
                 // Generate a human-readable sentence
-                string randomSentence = SentenceGenerator.GenerateRandom(maxWordsPerSentence);
+                var randomSentence = SentenceGenerator.GenerateRandom(maxWordsPerSentence);
 
                 // Construct the line
-                string line = $"{randomInt}. {randomSentence}";
+                var line = $"{randomInt}. {randomSentence}";
 
                 // Occasionally add duplicate lines
                 if (Random.Shared.NextDouble() < 0.1 && reservoir.Count > 0)
@@ -49,7 +49,7 @@ public class GeneratorService
                     }
                     else
                     {
-                        int index = Random.Shared.Next(reservoir.Count());
+                        var index = Random.Shared.Next(reservoir.Count());
                         if (index < reservoirSize)
                         {
                             reservoir[index] = line;
@@ -68,10 +68,10 @@ public class GeneratorService
                 {
                     randomInt = Random.Shared.NextInt64(long.MinValue, long.MaxValue);
                     
-                    string reservoirLine = reservoir[Random.Shared.Next(reservoir.Count)];
-                    int index = reservoirLine.IndexOf(". ", StringComparison.Ordinal);
+                    var reservoirLine = reservoir[Random.Shared.Next(reservoir.Count)];
+                    var index = reservoirLine.IndexOf(". ", StringComparison.Ordinal);
                     
-                    string duplicateSentence = reservoirLine.Substring(index + 2);
+                    var duplicateSentence = reservoirLine.Substring(index + 2);
                     writer.WriteLine($"{randomInt}. {duplicateSentence}");
                     
                     currentSize += Encoding.UTF8.GetByteCount($"{randomInt}. {duplicateSentence}" + Environment.NewLine);
