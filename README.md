@@ -1,5 +1,24 @@
 # Code Challenge
 
+## Context
+The specific .NET applications sorts files with the following format:
+
+    415. Apple
+    30432. Something something something
+    1. Apple
+    32. Cherry is the best
+    2. Banana is yellow
+
+Each record contains number and corresponding string separated by dot and space.
+At first the application compares the string part of different records and in the case of their equality it compares numbers related to each string. So the output  file in the example above will be the following:
+
+    1. Apple
+    415. Apple
+    2. Banana is yellow
+    32. Cherry is the best
+    30432. Something something something
+
+
 ## File Generation Utility
 ### Functional Requirements
 - Create a utility that generates a file
@@ -78,5 +97,12 @@ BEGIN { line_count = 0 }
 
 
 ```
+
+
+# References
+1. https://github.com/Dobby007/External-Sorting-Algorithm
+2. https://github.com/vgotra/LargeTextFilesSorting
+3. https://en.wikipedia.org/wiki/External_sorting
+4. https://medium.com/@mbanaee61/a-deep-dive-into-merge-algorithms-unraveling-the-magic-of-external-sorting-with-a-sample-69dd2abf4316
 
 

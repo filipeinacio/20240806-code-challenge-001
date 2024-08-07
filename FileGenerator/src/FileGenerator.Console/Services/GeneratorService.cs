@@ -20,8 +20,6 @@ public class GeneratorService
         long currentSize = 0;
         const int maxWordsPerSentence = 100; // maximum number of words in a sentence
 
-        int numberOfLines = 0;
-
         using (var writer = new StreamWriter(filePath))
         {
             while (currentSize < fileSize)
@@ -40,8 +38,6 @@ public class GeneratorService
                 {
                     // Use a previously generated line to introduce duplicates
                     line = reservoir[Random.Shared.Next(reservoir.Count)];
-
-                    System.Console.WriteLine($"Duplicate Lines at:{numberOfLines}");
                 }
                 else
                 {
@@ -63,7 +59,6 @@ public class GeneratorService
 
                 // Write the line to the file
                 writer.WriteLine(line);
-                numberOfLines++;
 
                 // Update current size
                 currentSize += Encoding.UTF8.GetByteCount(line + Environment.NewLine);
@@ -79,9 +74,6 @@ public class GeneratorService
                     string duplicateSentence = reservoirLine.Substring(index + 2);
                     writer.WriteLine($"{randomInt}. {duplicateSentence}");
                     
-                    System.Console.WriteLine($"Duplicate Sentence at:{numberOfLines++}");
-                    
-                    numberOfLines++;
                     currentSize += Encoding.UTF8.GetByteCount($"{randomInt}. {duplicateSentence}" + Environment.NewLine);
                 }
             }
