@@ -32,3 +32,51 @@
 - Lets assume that the generation and the processing is done in the same environment. The [newline](https://en.wikipedia.org/wiki/Newline) will be managed by the dotnet property [Environment.NewLine](https://learn.microsoft.com/en-us/dotnet/api/system.environment.newline?view=net-8.0).
 
 ## Out of scope
+
+## Validation
+### Generator
+#### Line Duplication
+```bash
+wc -l outputfile.txt
+```
+vs
+```bash
+sort outputfile.txt | uniq | wc -l
+```
+
+#### Sentence Duplication
+```bash
+sort out2.txt | uniq | awk '
+BEGIN { line_count = 0 }
+{
+    # Find the first occurrence of ". " and extract the rest of the line
+    split($0, parts, /\. /)
+    if (length(parts) > 1) {
+        # Print the extracted part after ". "
+        print substr($0, index($0, ". ") + 2)
+        line_count++
+    }
+}
+' | wc -l
+```
+
+vs
+
+```bash
+sort out2.txt | uniq | awk '
+BEGIN { line_count = 0 }
+{
+    # Find the first occurrence of ". " and extract the rest of the line
+    split($0, parts, /\. /)
+    if (length(parts) > 1) {
+        # Print the extracted part after ". "
+        print substr($0, index($0, ". ") + 2)
+        line_count++
+    }
+}
+' | sort | uniq | wc -l
+
+
+```
+
+
