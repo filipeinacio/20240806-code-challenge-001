@@ -12,15 +12,15 @@ class Program
             return;
         }
 
-        if (!long.TryParse(args[0], out long fileSize) || fileSize <= 0)
+        if (!long.TryParse(args[0], out var fileSize) || fileSize <= 0)
         {
             Console.WriteLine("Please provide a valid positive number for file size.");
             return;
         }
 
-        string filePath = args[1];
+        var filePath = args[1];
 
-        Stopwatch stopWatch = new Stopwatch();
+        var stopWatch = new Stopwatch();
         stopWatch.Start();
 
         var generator = new GeneratorService();
@@ -28,10 +28,10 @@ class Program
 
         stopWatch.Stop();
         // Get the elapsed time as a TimeSpan value.
-        TimeSpan ts = stopWatch.Elapsed;
+        var ts = stopWatch.Elapsed;
 
         // Format and display the TimeSpan value.
-        string elapsedTime = $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds / 10:00}";
+        var elapsedTime = $"{ts.Hours:00}:{ts.Minutes:00}:{ts.Seconds:00}.{ts.Milliseconds / 10:00}";
         Console.WriteLine("RunTime " + elapsedTime);
     }
 }
